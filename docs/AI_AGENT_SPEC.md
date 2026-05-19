@@ -60,8 +60,8 @@ Moyo의 그룹 채팅 안에서 **대화 흐름을 실시간으로 이해하고 
 │            ▼                           ▼                       │
 │  ┌──────────────────────────────────────────────────┐         │
 │  │  agent_service.py (신규)                          │         │
-│  │  - Claude API 호출 (마스킹된 입력만)               │         │
-│  │  - tool use 기반 구조화 출력                       │         │
+│  │  - CLOVA Studio API 호출 (마스킹된 입력만)          │         │
+│  │  - Function Calling/Structured Outputs 기반 응답    │         │
 │  └─────────────────────────┬────────────────────────┘         │
 │                            │                                   │
 │  ┌─────────────────────────▼────────────────────────┐         │
@@ -116,7 +116,7 @@ Moyo의 그룹 채팅 안에서 **대화 흐름을 실시간으로 이해하고 
                   로컬에서 처리 가능?              불가능 (복잡)
                           │                         │
                           ▼                         ▼
-              [로컬 응답 카드 생성]          [PII 마스킹] ─▶ [Claude API]
+              [로컬 응답 카드 생성]          [PII 마스킹] ─▶ [CLOVA Studio API]
                                                             │
                                                             ▼
                                                     [구조화 응답]
@@ -135,7 +135,7 @@ Moyo의 그룹 채팅 안에서 **대화 흐름을 실시간으로 이해하고 
 - [WebLLM](https://webllm.mlc.ai/) + Qwen2.5-0.5B (보조, 선택)
 - 자체 학습 KoBERT 경량 분류기 (가능하면)
 
-### 4.3 클라우드 전송이 필요한 경우 (마스킹 후 Claude API)
+### 4.3 클라우드 전송이 필요한 경우 (마스킹 후 CLOVA Studio API)
 
 | 작업 | 클라우드 필요 사유 |
 |------|------------------|
@@ -159,7 +159,7 @@ Moyo의 그룹 채팅 안에서 **대화 흐름을 실시간으로 이해하고 
 
 - 그룹 채팅방 설정 화면에 토글: 
   - "AI 기능 사용" (기본 ON)
-  - "마스킹 후 외부 AI(Claude) 호출 허용" (기본 OFF — 명시적 옵트인)
+  - "마스킹 후 외부 AI(HyperCLOVA X) 호출 허용" (기본 OFF — 명시적 옵트인)
 - OFF 시 온디바이스 기능만 동작 (요약 품질 저하 경고 표시).
 
 ---
@@ -259,7 +259,7 @@ POST   /agent/vote/{vote_id}/close
 ```
 POST   /agent/schedule            폴 생성
 POST   /agent/schedule/{id}/respond
-GET    /agent/schedule/{id}/recommend   AI 추천 시간 (Claude 호출, 마스킹)
+GET    /agent/schedule/{id}/recommend   AI 추천 시간 (CLOVA Studio 호출, 마스킹)
 ```
 
 ### 6.4 요약
@@ -316,23 +316,29 @@ WebLLM(선택)은 별도 dynamic import로 로딩, 모델 크기 때문에 사�
 
 ---
 
-## 8. Claude API 사용 패턴 (백엔드)
+## 8. HyperCLOVA X / CLOVA Studio API 사용 패턴 (백엔드)
 
 ### 8.1 모델 선택
 
-- **Sonnet 4.6** (`claude-sonnet-4-6`): 요약·일정 추천 (기본)
-- **Haiku 4.5** (`claude-haiku-4-5-20251001`): 의도 분류 fallback (빠르고 저렴)
+- **HCX-DASH-002**: 의도 분류 fallback, 후보 추출, 짧은 요약 등 빠른 응답이 필요한 기본 모델.
+- **HCX-007**: 복잡한 일정 충돌 분석, 긴 대화 요약, 추론 품질이 중요한 작업.
+- **HCX-005**: 이미지 입력이 필요한 확장 기능이 생길 때만 사용. 현재 채팅 텍스트 기반 MVP에는 제외.
 
-### 8.2 프롬프트 캐싱
+모델명은 CLOVA Studio 콘솔/API 문서의 최신 제공 모델명을 기준으로 환경변수에서 교체 가능하게 둔다.
 
-시스템 프롬프트(역할·툴 정의)는 모든 호출에서 동일하므로 `cache_control: {"type": "ephemeral"}` 적용 → 비용 최대 90% 절감.
+### 8.2 API 호출 방식
 
-### 8.3 Tool Use로 구조화 출력
+- 백엔드는 `app/services/agent_service.py`에서 CLOVA Studio Chat Completions v3 API를 호출한다.
+- 인증 키는 서버 환경변수(`CLOVA_STUDIO_API_KEY`)로만 관리하고 프론트엔드에는 노출하지 않는다.
+- 네트워크 전송 데이터는 클라이언트에서 마스킹된 메시지와 작업 힌트만 포함한다.
+- 응답은 가능하면 JSON Schema 기반 Structured Outputs를 사용하고, 기능 실행이 필요한 경우 Function Calling을 사용한다.
 
-자유 텍스트 응답 대신 tool 정의로 강제:
+### 8.3 Function Calling / Structured Outputs로 구조화 출력
+
+자유 텍스트 응답 대신 함수/스키마 정의로 강제:
 
 ```python
-tools = [
+functions = [
   {
     "name": "create_vote",
     "description": "후보가 있는 의사결정 발화에서 투표 생성",
@@ -360,9 +366,11 @@ tools = [
 
 ### 8.4 비용 가드
 
-- 방당 일일 Claude 호출 횟수 상한 (예: 50회).
+- 방당 일일 CLOVA Studio 호출 횟수 상한 (예: 50회).
 - 사용자당 분당 호출 상한 (예: 5회).
 - 한도 초과 시 온디바이스 fallback으로 그레이스풀 디그레이드.
+- `maxTokens`는 작업별로 작게 설정한다. 의도 분류는 256~512, 요약은 1,024~2,048부터 시작한다.
+- 입력/출력 토큰을 모두 로깅해 방 단위 사용량을 확인하고, 일일 예산 초과 시 클라우드 기능을 일시 중지한다.
 
 ---
 
@@ -414,7 +422,7 @@ tools = [
 | 5/3주 | DB 마이그레이션 (4개 테이블) + `/agent/vote` REST | 이유정 | alembic 마이그레이션, 라우터 |
 | 5/4주 | Transformers.js 통합 + 의도 분류 | 신소연 | `onDeviceClassifier.ts` |
 | 5/4주 | `AgentSuggestionCard` + `VoteCard` UI | 이유정 | 컴포넌트 |
-| 6/1주 | Claude API 연동 (요약) + 마스킹 | 신소연 + 이유정 | `agent_service.py`, `piiMasker.ts` |
+| 6/1주 | CLOVA Studio API 연동 (요약) + 마스킹 | 신소연 + 이유정 | `agent_service.py`, `piiMasker.ts` |
 | 6/1주 | 침묵 트리거 + 누적 트리거 | 신소연 | `silenceTrigger.ts`, `accumulationTrigger.ts` |
 | 6/2주 | 일정 조율 (`ScheduleCard` + 추천 API) | 이유정 + 신소연 | 폴 UI, `/agent/schedule/recommend` |
 | 6/3주 | 통합 테스트 + 발표 시나리오 리허설 | 전원 | 데모 시나리오 |
@@ -430,10 +438,10 @@ tools = [
 |-------|------|------|
 | 온디바이스 모델 로딩 시간 (수 초~수십 초) | UX | 첫 채팅방 진입 시 비동기 워밍업, 로딩 인디케이터 |
 | 한국어 NER 품질 부족 | 후보 추출 오류 | 정규식 + 화이트리스트(음식 사전) 병행 |
-| Claude API 응답 지연 | 채팅 흐름 끊김 | 비동기 처리 + "AI가 정리 중..." 토스트 |
+| CLOVA Studio API 응답 지연 | 채팅 흐름 끊김 | 비동기 처리 + "AI가 정리 중..." 토스트 |
 | 마스킹 누락으로 PII 유출 | 프라이버시 | 마스킹 규칙 단위 테스트 필수, 화이트박스 토글 (사용자가 마스킹 결과 미리보기) |
 | AI 카드 과다 노출 → 피로감 | UX | 동일 방에 동시 최대 1개 카드, 10분 쿨다운 |
-| Claude API 비용 폭주 | 예산 | §8.4 비용 가드, 일일 토큰 상한 알림 |
+| CLOVA Studio API 비용 폭주 | 예산 | §8.4 비용 가드, 일일 토큰 상한 알림 |
 
 ---
 
@@ -442,7 +450,7 @@ tools = [
 | 보고서 항목 | 본 스펙 대응 |
 |-----------|-------------|
 | "대화 내용 구조화" | §5 `agent_suggestions`, §7.1 `AgentObserver` |
-| "대화 유형 분류" | §4.2 온디바이스 분류기 + §8 Claude tool use |
+| "대화 유형 분류" | §4.2 온디바이스 분류기 + §8 HyperCLOVA X Function Calling/Structured Outputs |
 | "유형에 따른 기능 추천" | §3 트리거 + §9 시나리오 |
 | "형태소 분석, NER, 임베딩, LLM" | §4.2 (전부 온디바이스 1차) + §8 (LLM은 fallback) |
 | "투표/일정/요약" | §6 API 명세 |
@@ -456,5 +464,5 @@ tools = [
 1. 이 문서에 대한 팀 리뷰 (5/20 회의 안건)
 2. alembic 마이그레이션 PR 생성 (이유정)
 3. Transformers.js 모델 후보 PoC (신소연) — 한국어 의도 분류 정확도 측정
-4. Claude API 키 발급 + 백엔드 환경변수 설정 (이유정)
+4. CLOVA Studio API 키 발급 + 백엔드 환경변수 설정 (이유정)
 5. 마스킹 규칙 단위 테스트 작성 (신소연)
