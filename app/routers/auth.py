@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.database import get_db
-from app.schemas.user import NicknameUpdate, UserCreate, UserLogin, SignupOut, LoginOut, EmailRequest, EmailConfirm
+from app.schemas.user import NicknameUpdate, UserCreate, UserLogin, SignupOut, LoginOut, EmailRequest, EmailConfirm, PasswordReset, PasswordChange
 from app.services.auth_service import create_user, authenticate_user
 from app.utils.file_utils import save_profile_image
 from app.utils.security import create_access_token
-from app.services.auth_service import request_email_code, confirm_email_code, ensure_recent_verified
+from app.services.auth_service import request_email_code, confirm_email_code, ensure_recent_verified, reset_password, change_password
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.security import decode_access_token
 from sqlalchemy import select, func
@@ -35,6 +35,37 @@ def email_confirm(body: EmailConfirm, db: Session = Depends(get_db)):
     try:
         confirm_email_code(db, body.email, body.code)
         return {"verified": True}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+# 비밀번호 찾기 (이메일 인증 후 재설정)
+@router.post("/password/reset")
+def password_reset(body: PasswordReset, db: Session = Depends(get_db)):
+    try:
+        reset_password(db, body.email, body.new_password)
+        return {"message": "Password reset successful"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+# 비밀번호 변경 (로그인 상태)
+@router.patch("/me/password")
+def password_change(
+    body: PasswordChange,
+    creds: HTTPAuthorizationCredentials = Depends(bearer),
+    db: Session = Depends(get_db),
+):
+    if creds is None or creds.scheme.lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Missing or invalid token")
+    try:
+        payload = decode_access_token(creds.credentials)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    email = payload.get("sub")
+    if not email:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    try:
+        change_password(db, email, body.current_password, body.new_password)
+        return {"message": "Password changed successfully"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

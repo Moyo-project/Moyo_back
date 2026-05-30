@@ -73,6 +73,25 @@ def confirm_email_code(db: Session, email: str, code: str) -> None:
     ev.verified_at = now
     db.commit()
 
+def reset_password(db: Session, email: str, new_password: str) -> None:
+    """이메일 인증 완료 후 비밀번호를 재설정한다."""
+    ensure_recent_verified(db, email, within_minutes=30)
+    user = db.query(User).filter(User.email == email.lower().strip()).first()
+    if not user:
+        raise ValueError("User not found")
+    user.hashed_password = hash_password(new_password)
+    db.commit()
+
+def change_password(db: Session, email: str, current_password: str, new_password: str) -> None:
+    """로그인 상태에서 현재 비밀번호를 확인하고 변경한다."""
+    user = db.query(User).filter(User.email == email.lower().strip()).first()
+    if not user:
+        raise ValueError("User not found")
+    if not verify_password(current_password, user.hashed_password):
+        raise ValueError("Current password is incorrect")
+    user.hashed_password = hash_password(new_password)
+    db.commit()
+
 def ensure_recent_verified(db: Session, email: str, within_minutes: int = 30) -> None:
     """회원가입 직전에 최근 인증 성공 이력이 있어야 가입 허용."""
     ev = db.execute(select(EmailVerification).where(EmailVerification.email == email)).scalar_one_or_none()

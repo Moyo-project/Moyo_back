@@ -43,3 +43,11 @@ NicknameStr = Annotated[str, StringConstraints(min_length=1, max_length=30)]
 
 class NicknameUpdate(BaseModel):
     nickname: NicknameStr
+
+class PasswordReset(BaseModel):
+    email: EmailStr
+    new_password: str
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
