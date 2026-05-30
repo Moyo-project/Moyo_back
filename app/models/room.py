@@ -35,6 +35,7 @@ class ChatRoom(Base):
     # 관계들
     members = relationship("RoomMember", back_populates="room")
     messages = relationship("Message", back_populates="room")
+    topics = relationship("Topic", back_populates="room", cascade="all, delete-orphan")
 
     # 선택 사항: Group 모델에 back_populates 있으면 같이 연결
     # group = relationship("Group", back_populates="chat_room")

@@ -18,6 +18,7 @@ from app.routers import image as image_router
 from app.routers import rooms, messages  # etc...
 from app.websocket import endpoints as ws_endpoints
 from app.routers import calendar as calendar_router
+from app.routers import topic as topic_router
 from app.routers import post as post_router
 
 # ─────────────────────────────
@@ -75,7 +76,10 @@ app.include_router(image_router.router, prefix="/api/v1")
 # 채팅 라우터
 app.include_router(rooms.router)
 app.include_router(messages.router)
-app.include_router(ws_endpoints.router)  
+app.include_router(ws_endpoints.router)
+
+# 토픽 라우터
+app.include_router(topic_router.router, prefix="/api/v1")
 
 # 5) 헬스체크
 @app.get("/", tags=["system"])

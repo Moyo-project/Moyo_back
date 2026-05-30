@@ -11,3 +11,4 @@ from .user import User
 from .group import Group
 from .message import Message
 from .invite import InviteCode
+from .topic import Topic
