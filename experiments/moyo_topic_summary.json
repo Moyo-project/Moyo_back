@@ -1,0 +1,89 @@
+{
+  "topics": [
+    {
+      "topic_id": "t1",
+      "title": "만날 장소",
+      "structure_type": "opinion",
+      "items": [
+        {
+          "target": "강남",
+          "positive_participants": ["소연", "지윤"],
+          "negative_participants": ["민수"],
+          "source_message_ids": ["m1", "m2", "m3"]
+        },
+        {
+          "target": "홍대",
+          "positive_participants": ["민수"],
+          "negative_participants": [],
+          "source_message_ids": ["m4"]
+        }
+      ],
+      "decision": null,
+      "status": "open"
+    },
+    {
+      "topic_id": "t2",
+      "title": "준비 업무",
+      "structure_type": "task",
+      "items": [
+        {
+          "task": "숙소 예약",
+          "assignees": ["민수"],
+          "due": {
+            "date": "2026-05-30",
+            "time": null
+          },
+          "status": "todo",
+          "source_message_ids": ["m5"]
+        },
+        {
+          "task": "맛집 조사",
+          "assignees": ["소연", "지윤"],
+          "due": {
+            "date": null,
+            "time": null
+          },
+          "status": "todo",
+          "source_message_ids": ["m6"]
+        }
+      ],
+      "status": "open"
+    },
+    {
+      "topic_id": "t3",
+      "title": "참여자 정보 수집",
+      "structure_type": "collection",
+      "fields": ["이름", "전화번호", "이메일"],
+      "items": [
+        {
+          "participant": "소연",
+          "values": {
+            "이름": "신소연",
+            "전화번호": "010-1111-1111",
+            "이메일": null
+          },
+          "source_message_ids": ["m7"]
+        },
+        {
+          "participant": "민수",
+          "values": {
+            "이름": "박민수",
+            "전화번호": null,
+            "이메일": "minsu@example.com"
+          },
+          "source_message_ids": ["m8"]
+        },
+        {
+          "participant": "지윤",
+          "values": {
+            "이름": null,
+            "전화번호": "010-3333-3333",
+            "이메일": "jiyoon@example.com"
+          },
+          "source_message_ids": ["m9"]
+        }
+      ],
+      "status": "open"
+    }
+  ]
+}

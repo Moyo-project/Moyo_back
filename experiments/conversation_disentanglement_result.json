@@ -1,0 +1,78 @@
+{
+  "topics": [
+    {
+      "topic_id": "topic_53f6ba91",
+      "title": "MT 어디로 갈까?",
+      "summary": "MT 어디로 갈까? (최근 제안: 제주도, 부산) - 항공권 비용 문제 제기됨, 숙소/예산을 포함한 전반적인 비용 검토 필요성 대두",
+      "messages": [
+        {
+          "message_id": "msg_ee7742b6",
+          "speaker": "민지",
+          "text": "MT 어디로 갈까?",
+          "parent_id": null
+        },
+        {
+          "message_id": "msg_24411926",
+          "speaker": "서연",
+          "text": "제주도 괜찮은데",
+          "parent_id": "msg_ee7742b6"
+        },
+        {
+          "message_id": "msg_f0c40511",
+          "speaker": "지훈",
+          "text": "근데 예산은 얼마 정도야?",
+          "parent_id": "msg_24411926"
+        },
+        {
+          "message_id": "msg_c4014e78",
+          "speaker": "하은",
+          "text": "나는 부산도 좋아",
+          "parent_id": "msg_24411926"
+        },
+        {
+          "message_id": "msg_ad0b4a24",
+          "speaker": "민지",
+          "text": "부산이면 숙소가 좀 싸려나?",
+          "parent_id": "msg_c4014e78"
+        },
+        {
+          "message_id": "msg_b2c94323",
+          "speaker": "지훈",
+          "text": "MT는 1박 2일로 가는 거야?",
+          "parent_id": "msg_c4014e78"
+        },
+        {
+          "message_id": "msg_3aeef80d",
+          "speaker": "민지",
+          "text": "제주도는 비행기값이 좀 부담될 듯",
+          "parent_id": "msg_f0c40511"
+        }
+      ]
+    },
+    {
+      "topic_id": "topic_d6c979ee",
+      "title": "오늘 저녁 뭐 먹을래?",
+      "summary": "오늘 저녁 뭐 먹을래? (최근 제안: 치킨, 떡볶이)",
+      "messages": [
+        {
+          "message_id": "msg_8f016d3f",
+          "speaker": "준호",
+          "text": "오늘 저녁 뭐 먹을래?",
+          "parent_id": null
+        },
+        {
+          "message_id": "msg_e18d47a1",
+          "speaker": "서연",
+          "text": "치킨 먹고 싶다",
+          "parent_id": "msg_8f016d3f"
+        },
+        {
+          "message_id": "msg_17278512",
+          "speaker": "하은",
+          "text": "치킨 말고 떡볶이도 괜찮음",
+          "parent_id": "msg_e18d47a1"
+        }
+      ]
+    }
+  ]
+}

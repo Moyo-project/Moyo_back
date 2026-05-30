@@ -1,0 +1,101 @@
+{
+  "topics": [
+    {
+      "topic_id": "t1",
+      "title": "저녁 메뉴 추천",
+      "structure_type": "opinion",
+      "items": [
+        {
+          "target": "치킨",
+          "positive_participants": [
+            "민수"
+          ],
+          "negative_participants": [],
+          "source_message_ids": [
+            "m2"
+          ]
+        },
+        {
+          "target": "피자",
+          "positive_participants": [
+            "지윤"
+          ],
+          "negative_participants": [],
+          "source_message_ids": [
+            "m3"
+          ]
+        }
+      ],
+      "status": "open",
+      "decision": null
+    },
+    {
+      "topic_id": "t2",
+      "title": "숙소 예약",
+      "structure_type": "task",
+      "items": [
+        {
+          "task": "숙소 예약",
+          "assignees": [
+            "민수"
+          ],
+          "due": {
+            "date": null,
+            "time": null
+          },
+          "status": "todo",
+          "source_message_ids": [
+            "m5"
+          ]
+        },
+        {
+          "task": "장보기",
+          "assignees": [
+            "지윤"
+          ],
+          "due": {
+            "date": null,
+            "time": null
+          },
+          "status": "todo",
+          "source_message_ids": [
+            "m6"
+          ]
+        }
+      ],
+      "status": "open"
+    },
+    {
+      "topic_id": "t3",
+      "title": "연락처 수집",
+      "structure_type": "collection",
+      "items": [
+        {
+          "participant": "민수",
+          "values": {
+            "전화번호": "010-1111-2222",
+            "이메일": null
+          },
+          "source_message_ids": [
+            "m8"
+          ]
+        },
+        {
+          "participant": "지윤",
+          "values": {
+            "이메일": "jiyoon@example.com",
+            "전화번호": null
+          },
+          "source_message_ids": [
+            "m9"
+          ]
+        }
+      ],
+      "status": "open",
+      "fields": [
+        "전화번호",
+        "이메일"
+      ]
+    }
+  ]
+}

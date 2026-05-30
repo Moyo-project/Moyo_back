@@ -44,3 +44,14 @@ class TopicOut(BaseModel):
 
 class TopicBulkSave(BaseModel):
     topics: list[TopicCreate]
+
+
+class TopicAnalyzeMessageIn(BaseModel):
+    message_id: int
+
+
+class TopicAnalyzeMessageOut(BaseModel):
+    changed: bool
+    topic: TopicOut | None = None
+    decision: str
+    reason: str | None = None

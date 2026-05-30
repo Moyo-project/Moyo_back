@@ -5,8 +5,15 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.deps.auth import current_user
 from app.models.user import User
-from app.schemas.topic import TopicCreate, TopicUpdate, TopicOut, TopicBulkSave
-from app.services import topic_service
+from app.schemas.topic import (
+    TopicAnalyzeMessageIn,
+    TopicAnalyzeMessageOut,
+    TopicBulkSave,
+    TopicCreate,
+    TopicOut,
+    TopicUpdate,
+)
+from app.services import topic_ai_service, topic_service
 
 router = APIRouter(prefix="/rooms/{room_id}/topics", tags=["topics"])
 
@@ -39,6 +46,26 @@ def bulk_save_topics(
 ):
     """AI 분석 결과를 한 번에 upsert."""
     return topic_service.bulk_save_topics(db, room_id, body)
+
+
+@router.post("/analyze-message", response_model=TopicAnalyzeMessageOut)
+def analyze_message_topic(
+    room_id: int,
+    body: TopicAnalyzeMessageIn,
+    db: Session = Depends(get_db),
+    _: User = Depends(current_user),
+):
+    changed, topic, decision, reason = topic_ai_service.analyze_message(
+        db=db,
+        room_id=room_id,
+        message_id=body.message_id,
+    )
+    return TopicAnalyzeMessageOut(
+        changed=changed,
+        topic=topic,
+        decision=decision,
+        reason=reason,
+    )
 
 
 @router.patch("/{topic_id}", response_model=TopicOut)
