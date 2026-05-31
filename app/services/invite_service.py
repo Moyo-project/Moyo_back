@@ -75,6 +75,27 @@ def redeem_invite(db: Session, code: str):
     return (True, None, row)
 
 # [추가] 재발급(rotate) 유스케이스 추가
+def get_active_group_invite(db: Session, group_id: int) -> InviteCode | None:
+    """그룹의 현재 유효한 초대코드를 반환합니다 (없으면 None)."""
+    now = datetime.now(timezone.utc)
+    rows = db.scalars(
+        select(InviteCode)
+        .where(
+            InviteCode.purpose == PURPOSE_GROUP_JOIN,
+            InviteCode.payload.contains(f'"groupId": {group_id}'),
+            InviteCode.revoked_at.is_(None),
+        )
+        .order_by(InviteCode.created_at.desc())
+    ).all()
+    for row in rows:
+        exp = _as_aware_utc(row.expires_at)
+        if exp and exp < now:
+            continue
+        if row.max_uses > 0 and row.used_count >= row.max_uses:
+            continue
+        return row
+    return None
+
 def rotate_invite(db: Session, old_code: str, issuer_user_id: int | None):
     row = db.scalar(select(InviteCode).where(InviteCode.code == old_code))
     if not row:

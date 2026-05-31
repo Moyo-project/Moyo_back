@@ -5,7 +5,7 @@ from app.database import get_db
 from app.schemas.invite import (
     InviteCreateIn, InviteOut, InviteVerifyIn, InviteVerifyOut, InviteRedeemIn
 )
-from app.services.invite_service import create_invite, verify_invite, redeem_invite
+from app.services.invite_service import create_invite, verify_invite, redeem_invite, get_active_group_invite
 from app.deps.auth import current_user
 from app.models.user import User
 from app.schemas.invite import InviteRotateIn, InviteOut
@@ -63,7 +63,15 @@ def redeem(body: InviteRedeemIn, db: Session = Depends(get_db), user: User = Dep
         "usesLeft": uses_left,
     }
 
-# [추가] 재발급(rotate) 유스케이스 추가
+@router.get("/group/{group_id}", response_model=InviteOut | None)
+def get_group_invite(group_id: int, db: Session = Depends(get_db)):
+    row = get_active_group_invite(db, group_id)
+    if not row:
+        return None
+    uses_left = None if row.max_uses <= 0 else max(row.max_uses - row.used_count, 0)
+    return {"code": row.code, "purpose": row.purpose, "usesLeft": uses_left,
+            "expiresAt": row.expires_at.isoformat() if row.expires_at else None}
+
 @router.post("/rotate", response_model=InviteOut)
 def rotate(body: InviteRotateIn, db: Session = Depends(get_db), user: User = Depends(current_user)):
     new_row = rotate_invite(db, body.code, user.id)
