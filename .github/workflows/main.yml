@@ -33,7 +33,7 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          tags: hwanghotae/moyo-fastapi:latest
+          tags: moyomanagement/moyo-fastapi:latest
 
   deploy:
     runs-on: ubuntu-latest
